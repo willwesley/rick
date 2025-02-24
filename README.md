@@ -40,7 +40,7 @@ At this point we were able to visit our server using HTTPS on a domain, which wa
 The example I demonstrated is https://rickastley.mooo.com.
 
 We created a custom server application using `nodejs` and set it up as a `systemd` service.
-The content of our server was at `/var/www/jsapp` and is as follows:
+The content of our server was at `/var/www/jsapp/index.js` and is as follows:
 
 ```js
 #!/usr/bin/env node
