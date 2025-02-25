@@ -12,11 +12,14 @@ const handleRequest = (req, res) => {
       body += data
     })
     req.on('end', () => {
-      const params = Object.fromEntries(body.split('&').map(
-        (param) => param.split('=')
-      ))
-      dancers.push(params)
-      kbye(res)
+      try {
+        const params = JSON.parse(body)
+        dancers.push(params)
+        kbye(res)
+      } catch {
+        res.writeHead(400)
+        res.end('Bad. Go away.')
+      }
     })
   } else {
     kbye(res)
