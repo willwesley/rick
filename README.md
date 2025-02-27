@@ -140,3 +140,22 @@ Edits to files in `jsapp` resulted in the server restarting.
 
 I demonstrated using a bash script to `scp` the relevant files from the local folders to the linode host and then restarting the `jsapp` service via `ssh`.
 I also mentioned this is janky as janks can be, but it's pretty sufficient for what we're doing right now.
+
+## Authentication and Authorization
+
+We've added `Basic` HTTP authentication to our app.
+As a part of this, we created a `password.db` file that we have `.gitignore`d to keep the secrets more secret.
+We understand that the `.db` extension is meaningless and in now way implies what the content of the file is, however, we have chosen to write it as JSON.
+
+We also are hashing (with salt and pepper) the passwords we're storing in that file.
+Right now, we've manually created a password for a single user in our password database.
+In order to get that hash, we used the `hash` function we defined on lines 8 and 9 of `jsapp/index.js` to hash a password concatenated with the username.
+This gives us a salted and peppered hash of the password:
+
+```js
+console.log(
+  hash('dastley' + 'rick')
+)
+```
+
+In a later homework assignment, we'll employ this same strategy when adding and manipulating users.
