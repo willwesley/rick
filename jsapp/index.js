@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 const http = require('http')
-const fs = require('node:fs');
+const fs = require('fs/promises')
 const { createHmac, randomUUID } = require('node:crypto');
 
 const secret = 'abcdefg';
@@ -9,14 +9,16 @@ const hash = (str) =>
   createHmac('sha256', secret).update(str).digest('hex');
 
 let users
-fs.readFile('passwd.db', 'utf8', (err, data) => {
-  if (err) {
-    console.error(err);
-    return;
-  }
-  users = JSON.parse(data)
-});
+fs.readFile('passwd.db')
+  .then((data) =>users = JSON.parse(data))
+  .catch(console.log)
 
+fs.readFile("dancers.json")
+  .then(d => dancers = JSON.parse(d))
+  .catch(console.log)
+
+const writeDancers = () =>
+  fs.writeFile("dancers.json", JSON.stringify(dancers))
 
 let dancers = []
 
@@ -38,9 +40,9 @@ const handleRequest = (req, res) => {
       if(req.method === 'DELETE') {
         if(uid[1]) {
           dancers = dancers.filter(
-            (d) => d.uid != uid[1]
+            (d) => d.id != uid[1]
           )
-          res.writeHead(200).end()
+          writeDancers().then(() => res.writeHead(200).end())
         } else {
           res.writeHead(400).end()
         }
@@ -53,16 +55,16 @@ const handleRequest = (req, res) => {
           try {
             const params = JSON.parse(body)
             if(!uid && req.method == 'POST') {
-              uid = randomUUID()
-              dancers.push({ ...params, uid })
-              res.writeHead(201).end(uid)
+              const id = randomUUID()
+              dancers.push({ ...params, id })
+              writeDancers().then(() => res.writeHead(201).end(id))
             } else if(uid && req.method == 'PUT') {
               const i = dancers.findIndex(
-                (d) => d.uid == uid[1]
+                (d) => d.id == uid[1]
               )
               if(i >= 0) {
                 dancers[i] = params
-                res.writeHead(200).end()
+                writeDancers().then(() => res.writeHead(200).end())
               } else {
                 res.writeHead(404).end()
               }
