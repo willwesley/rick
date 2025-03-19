@@ -15,11 +15,11 @@ const refreshDancers = () => {
         (ev) => {
           ev.stopPropagation()
           if(ev.shiftKey) {
-            fetch(`/api?uid=${dancer.id}`, {
+            fetch(`/api?uid=${dancer.cid}`, {
               method: 'DELETE'
             }).then(refreshDancers)
           } else {
-            fetch(`/api?uid=${dancer.id}`, {
+            fetch(`/api?uid=${dancer.cid}`, {
               method: 'PUT',
               body: JSON.stringify({
                 ...dancer,

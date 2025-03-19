@@ -4,3 +4,4 @@ passwd.db
 node_modules
 jsapp/dancers.json
 jsapp/dancers.sqlite
+jsapp/localdb

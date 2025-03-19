@@ -2,16 +2,19 @@
 
 const http = require('http')
 const { createHmac, randomUUID } = require('node:crypto');
+const locallydb = require('locallydb')
 
 const secret = 'abcdefg';
 const hash = (str) =>
   createHmac('sha256', secret).update(str).digest('hex');
 
+const db = new locallydb('./localdb')
+const dancers = db.collection('dancers')
+
 let users = {
   rick: 'acbc32eda67ad028764a1424b85c3f31e35585658275ea1b0014adaffa85d1d3'
 }
 let admins = [ 'rick' ]
-let dancers = []
 
 const authenticate = (auth = '') => {
   const [ user, pass ] = atob(auth.slice(6)).split(':')
@@ -84,9 +87,7 @@ const handleDancer = (req, res, user, query) => {
     let uid = query && query.match(/uid=([0-9a-f-]+)/)
     if(req.method === 'DELETE') {
       if(uid && uid[1]) {
-        dancers = dancers.filter(
-          (d) => d.id != uid[1]
-        )
+        dancers.remove(1 * uid[1])
         res.writeHead(200).end()
       } else {
         res.writeHead(400).end()
@@ -100,15 +101,14 @@ const handleDancer = (req, res, user, query) => {
         try {
           const params = JSON.parse(body)
           if(!uid && req.method == 'POST') {
-            id = randomUUID()
-            dancers.push({ ...params, id })
-            res.writeHead(201).end(id)
+            dancers.insert(params)
+            res.writeHead(201).end()
           } else if(uid && req.method == 'PUT') {
-            const i = dancers.findIndex(
-              (d) => d.id == uid[1]
-            )
-            if(i >= 0) {
-              dancers[i] = params
+            if(dancers.get(1 * uid[1])) {
+              dancers.replace(
+                1 * uid[1],
+                params
+              )
               res.writeHead(200).end()
             } else {
               res.writeHead(404).end()
@@ -125,7 +125,7 @@ const handleDancer = (req, res, user, query) => {
     res.writeHead(200, {
       "Content-Type": "application/json"
     })
-    res.write(JSON.stringify(dancers))
+    res.write(JSON.stringify(dancers.items))
     res.end()
   }
 }
