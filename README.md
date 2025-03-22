@@ -144,12 +144,16 @@ I also mentioned this is janky as janks can be, but it's pretty sufficient for w
 ## Authentication and Authorization
 
 We've added `Basic` HTTP authentication to our app.
-As a part of this, we created a `password.db` file that we have `.gitignore`d to keep the secrets more secret.
-We understand that the `.db` extension is meaningless and in now way implies what the content of the file is, however, we have chosen to write it as JSON.
+We've created a function to extract the username and password from the HTTP `Authorization` header if present, authenticate that information in our users map, and return the username if authenticated or `undefined` if not.
 
 We also are hashing (with salt and pepper) the passwords we're storing in that file.
-Right now, we've manually created a password for a single user in our password database.
-In order to get that hash, we used the `hash` function we defined on lines 8 and 9 of `jsapp/index.js` to hash a password concatenated with the username.
+We are using NodeJS's built in `crypto` library to create an HMAC that uses `sha256`.
+The reader is encouraged to research the truth, but we're going to be abusive to the truth and say that in doing this we're "peppering" our hashes.
+*Peppering* a hash is when we add a secret string to our passwords before performing the hash.
+We are, in fact, salting our password hashes with the user's username.
+
+We initially created a password for a single user in our password database manually.
+In order to get that hash, we used the `hash` function we defined on lines 7 and 8 of `jsapp/index.js` to hash a password concatenated with the username.
 This gives us a salted and peppered hash of the password:
 
 ```js
@@ -158,4 +162,8 @@ console.log(
 )
 ```
 
-In a later homework assignment, we'll employ this same strategy when adding and manipulating users.
+To authorize users, since we only have two levels of authorization, we consider anyone who can authenticate at least an "author," and users whose names are in the `admins` array to be admins.
+We actually have a third level of authorization for unauthenticated, or anonymous, users.
+All users can `GET` the list of dancers.
+Authors and above can `POST`, `PUT`, and `DELETE` dancers.
+Only admins can `GET`, `POST`, `PUT`, and `DELETE` to the `/api/admin` path, where user administration is performed.

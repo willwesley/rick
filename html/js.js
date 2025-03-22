@@ -51,3 +51,11 @@ document.querySelector('select').addEventListener(
   'click',
   (ev) => ev.stopPropagation()
 )
+
+document.getElementById('logout').addEventListener(
+  'click',
+  (ev) => {
+    ev.stopPropagation()
+    fetch('/logout')
+  }
+)

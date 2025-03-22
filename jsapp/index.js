@@ -24,58 +24,69 @@ const handleRequest = (req, res) => {
   const user = authenticate(req.headers.authorization)
   const [path, query] = req.url.split('?')
 
-  if(path === '/api/logout' || !user && (path === '/api/admin' ||
+  if(path === '/logout' || !user && (path === '/api/admin' ||
        ['POST', 'PUT', 'DELETE'].includes(req.method))) {
     res.writeHead(401, {
       "WWW-Authenticate": "Basic realm='oo laa'"
     }).end()
   } else if(path === '/api/admin') {
-    let uid = query && query.match(/user=([0-9a-f-]+)/)
-    if(!admins.includes(user)) {
-      res.writeHead(403).end()
-    } else {
-      switch(req.method) {
-        case 'DELETE':
-          if(uid && uid[0] && users[uid[0]]) {
+    handleAdmin(req, res, user, query)
+  } else {
+    handleDancer(req, res, user, query)
+  }
+}
+
+const handleAdmin = (req, res, user, query) => {
+  let uid = query && query.match(/user=([^&]+)/)
+  if(!admins.includes(user)) {
+    res.writeHead(403).end()
+  } else {
+    switch(req.method) {
+      case 'DELETE':
+        if(uid && uid[1] && users[uid[1]]) {
+          const adminsleft = admins.filter(u => uid[1] !== u)
+          if(adminsleft.length > 0) {
             delete users[uid[1]]
-            admins = admins.filter(u => uid == u)
+            admins = adminsleft
             res.writeHead(200).end()
           } else {
-            res.writeHead(400).end()
+            res.writeHead(400).end("Don't shoot yourself in the foot.")
           }
-          break
-        case 'POST':
-        case 'PUT':
-          let body = ''
-          req.on('data', (data) => {
-            body += data
-          })
-          req.on('end', () => {
-            try {
-              const params = JSON.parse(body)
-              if(params.user && params.pass) {
+        } else {
+          res.writeHead(400).end()
+        }
+        break
+      case 'POST':
+      case 'PUT':
+        let body = ''
+        req.on('data', (data) => {
+          body += data
+        })
+        req.on('end', () => {
+          try {
+            const params = JSON.parse(body)
+            if(params.user) {
+              if(params.pass) {
                 users[params.user] = hash(
                   params.pass + params.user
                 )
-                admins = admins.filter(u => uid !== u)
-                if(params.admin) {
-                  admins.push(params.user)
-                }
-                res.writeHead(200).end()
               }
-            } catch {
-              res.writeHead(400).end()
+              admins = admins.filter(u => uid !== u)
+              if(params.admin) {
+                admins.push(params.user)
+              }
+              res.writeHead(200).end()
             }
-          })
-          break
-        default:
-          res.end(JSON.stringify(Object.fromEntries(
-            Object.keys(users).map(u => [u, admins.includes(u)])
-          )))
-      }
+          } catch {
+            res.writeHead(400).end()
+          }
+        })
+        break
+      default:
+        res.end(JSON.stringify(Object.fromEntries(
+          Object.keys(users).map(u => [u, admins.includes(u)])
+        )))
     }
-  } else {
-    handleDancer(req, res, user, query)
   }
 }
 
@@ -129,5 +140,6 @@ const handleDancer = (req, res, user, query) => {
     res.end()
   }
 }
+
 const server = http.createServer(handleRequest)
 server.listen(3000)
