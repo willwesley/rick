@@ -20,11 +20,22 @@ const authenticate = (auth = '') => {
   }
 }
 
+let subscribers = []
+const sub = (...subscriber) => {
+  subscribers.push(subscriber)
+}
+const notify = () => {
+  subscribers.forEach(s => handleDancer(...s))
+  subscribers = []
+}
+
 const handleRequest = (req, res) => {
   const user = authenticate(req.headers.authorization)
   const [path, query] = req.url.split('?')
 
-  if(path === '/logout' || !user && (path === '/api/admin' ||
+  if(path === '/api/dancers') {
+    sub(req, res, user, query)
+  } else if(path === '/logout' || !user && (path === '/api/admin' ||
        ['POST', 'PUT', 'DELETE'].includes(req.method))) {
     res.writeHead(401, {
       "WWW-Authenticate": "Basic realm='oo laa'"
@@ -99,6 +110,7 @@ const handleDancer = (req, res, user, query) => {
           (d) => d.id != uid[1]
         )
         res.writeHead(200).end()
+        notify()
       } else {
         res.writeHead(400).end()
       }
@@ -114,6 +126,7 @@ const handleDancer = (req, res, user, query) => {
             id = randomUUID()
             dancers.push({ ...params, id })
             res.writeHead(201).end(id)
+            notify()
           } else if(uid && req.method == 'PUT') {
             const i = dancers.findIndex(
               (d) => d.id == uid[1]
@@ -121,6 +134,7 @@ const handleDancer = (req, res, user, query) => {
             if(i >= 0) {
               dancers[i] = params
               res.writeHead(200).end()
+              notify()
             } else {
               res.writeHead(404).end()
             }
