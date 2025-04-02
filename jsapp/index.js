@@ -25,9 +25,20 @@ const sub = (...subscriber) => {
   subscribers.push(subscriber)
 }
 const notify = () => {
-  subscribers.forEach(s => handleDancer(...s))
-  subscribers = []
+  subscribers.forEach(([req, res]) => {
+    res.write('data: ' + JSON.stringify(dancers) + '\n\n')
+  })
 }
+
+const countdown = (res, count) => {
+  res.write('data: ' + count + '\n\n')
+  if(count > 0) {
+    setTimeout(() => countdown(res, count - 1), 1000)
+  } else {
+    res.end()
+  }
+}
+// countdown(res, 10)
 
 const handleRequest = (req, res) => {
   const user = authenticate(req.headers.authorization)
@@ -35,6 +46,12 @@ const handleRequest = (req, res) => {
 
   if(path === '/api/dancers') {
     sub(req, res, user, query)
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+      'X-Accel-Buffering': 'no',
+    })
   } else if(path === '/logout' || !user && (path === '/api/admin' ||
        ['POST', 'PUT', 'DELETE'].includes(req.method))) {
     res.writeHead(401, {
@@ -88,7 +105,7 @@ const handleAdmin = (req, res, user, query) => {
               }
               res.writeHead(200).end()
             }
-          } catch {
+          } catch (e) {
             res.writeHead(400).end()
           }
         })
@@ -141,7 +158,8 @@ const handleDancer = (req, res, user, query) => {
           } else {
             res.writeHead(400).end()
           }
-        } catch {
+        } catch(e) {
+          console.log(e)
           res.writeHead(400).end()
         }
       })

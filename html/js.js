@@ -66,10 +66,16 @@ document.getElementById('logout').addEventListener(
 // setInterval(refreshDancers, 1000)
 
 /* long-polling */
-async function subscribe() {
-  const res = await fetch('/api/dancers')
-  const dancers = await res.json()
-  render(dancers)
-  subscribe()
-}
-subscribe()
+// async function subscribe() {
+//   const res = await fetch('/api/dancers')
+//   const dancers = await res.json()
+//   render(dancers)
+//   subscribe()
+// }
+// subscribe()
+
+
+const source = new EventSource('/api/dancers')
+source.addEventListener('message', ({ data }) => {
+  render(JSON.parse(data))
+})
