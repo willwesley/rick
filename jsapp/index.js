@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+const WebSocket = require('ws')
 const http = require('http')
 const { createHmac, randomUUID } = require('node:crypto');
 
@@ -28,6 +29,7 @@ const notify = () => {
   subscribers.forEach(([req, res]) => {
     res.write('data: ' + JSON.stringify(dancers) + '\n\n')
   })
+  wsserver.clients.forEach(ws => ws.send(JSON.stringify(dancers)))
 }
 
 const countdown = (res, count) => {
@@ -174,4 +176,8 @@ const handleDancer = (req, res, user, query) => {
 }
 
 const server = http.createServer(handleRequest)
+const wsserver = new WebSocket.WebSocketServer({ server })
+wsserver.on('connection', (ws) => {
+  ws.send(JSON.stringify(dancers))
+})
 server.listen(3000)

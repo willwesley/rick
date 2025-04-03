@@ -75,7 +75,20 @@ document.getElementById('logout').addEventListener(
 // subscribe()
 
 
-const source = new EventSource('/api/dancers')
-source.addEventListener('message', ({ data }) => {
-  render(JSON.parse(data))
-})
+// Server Sent Events example
+// const source = new EventSource('/api/dancers')
+// source.addEventListener('message', ({ data }) => {
+//   render(JSON.parse(data))
+// })
+
+
+// WebSocket example
+let wsurl
+if(window.location.protocol == 'http:') {
+  // assume dev environment. Very sad, http-server doesn't proxy ws :(
+  wsurl = 'ws://localhost:3000/api'
+} else {
+  wsurl = 'wss://' + window.location.host + '/api'
+}
+let sock = new WebSocket(wsurl)
+sock.addEventListener('message', ({ data }) => render(JSON.parse(data)))
