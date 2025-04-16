@@ -91,4 +91,45 @@ if(window.location.protocol == 'http:') {
   wsurl = 'wss://' + window.location.host + '/api'
 }
 let sock = new WebSocket(wsurl)
-sock.addEventListener('message', ({ data }) => render(JSON.parse(data)))
+sock.addEventListener('message', ({ data }) => {
+  render(JSON.parse(data))
+  window.navigator.vibrate([200, 100, 200])
+})
+
+const batteryWiring = async () => {
+  const battery = await navigator.getBattery()
+  battery.addEventListener('levelchange', console.log)
+  battery.addEventListener('chargingchange', console.log)
+}
+batteryWiring()
+
+document.body.addEventListener('click', async () => {
+  const permission = await Notification.requestPermission()
+  if(permission == 'granted') {
+    const thanks = new Notification(
+      "Rick",
+      { body: 'Never gonna give you up!' }
+    )
+  }
+})
+
+
+const ww = new Worker('worker.js')
+ww.onmessage = console.log
+
+ww.postMessage(5e7)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
