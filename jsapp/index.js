@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-const WebSocket = require('ws')
-const http = require('http')
-const { createHmac, randomUUID } = require('node:crypto');
+import { WebSocketServer } from 'ws'
+import http from 'http'
+import { createHmac, randomUUID } from 'node:crypto'
 
 const secret = 'abcdefg';
 const hash = (str) =>
@@ -176,7 +176,7 @@ const handleDancer = (req, res, user, query) => {
 }
 
 const server = http.createServer(handleRequest)
-const wsserver = new WebSocket.WebSocketServer({ server })
+const wsserver = new WebSocketServer({ server })
 wsserver.on('connection', (ws) => {
   ws.send(JSON.stringify(dancers))
 })
